@@ -133,6 +133,7 @@
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            min-height: 2.5em; /* 預留空間避免跳動 */
         }
         
         .player-container {
@@ -150,7 +151,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
         }
         
         .placeholder {
@@ -162,170 +162,6 @@
         #youtube-player {
             width: 100%;
             height: 100%;
-        }
-        
-        /* Apple風格播放器控制項 */
-        .player-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(transparent 60%, rgba(0,0,0,0.8) 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-            z-index: 10;
-        }
-        
-        .player-container:hover .player-overlay,
-        .player-overlay.show {
-            opacity: 1;
-            pointer-events: all;
-        }
-        
-        .player-controls {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 20px;
-            color: white;
-        }
-        
-        .progress-container {
-            margin-bottom: 16px;
-            position: relative;
-        }
-        
-        .progress-bar {
-            width: 100%;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 2px;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .progress-filled {
-            height: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 2px;
-            width: 0%;
-            transition: width 0.1s ease;
-        }
-        
-        .progress-handle {
-            position: absolute;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            width: 12px;
-            height: 12px;
-            background: white;
-            border-radius: 50%;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-            cursor: pointer;
-        }
-        
-        .progress-container:hover .progress-handle {
-            opacity: 1;
-        }
-        
-        .time-display {
-            position: absolute;
-            top: -30px;
-            left: 0;
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.8);
-        }
-        
-        .controls-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .controls-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        
-        .controls-right {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-        
-        .control-button {
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 50%;
-            transition: background-color 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-        }
-        
-        .control-button:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .control-button.play-pause {
-            width: 48px;
-            height: 48px;
-            font-size: 20px;
-        }
-        
-        .volume-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .volume-slider {
-            width: 80px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 2px;
-            cursor: pointer;
-            position: relative;
-        }
-        
-        .volume-filled {
-            height: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 2px;
-            width: 100%;
-            transition: width 0.1s ease;
-        }
-        
-        .fullscreen-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: #000;
-            z-index: 1000;
-            display: none;
-        }
-        
-        .fullscreen-container.active {
-            display: block;
-        }
-        
-        .fullscreen-player {
-            width: 100%;
-            height: 100%;
-            position: relative;
         }
         
         .results-card {
@@ -442,35 +278,11 @@
             .search-btn {
                 width: 100%;
             }
-            
-            .controls-row {
-                flex-direction: column;
-                gap: 12px;
-            }
-            
-            .controls-left,
-            .controls-right {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .volume-container {
-                display: none;
-            }
-            
+
             .result-thumb {
                 width: 60px;
                 height: 45px;
             }
-        }
-        
-        /* 確保控制項正常顯示 */
-        .player-overlay {
-            z-index: 100;
-        }
-        
-        .player-controls {
-            z-index: 101;
         }
     </style>
 </head>
@@ -506,58 +318,14 @@
             <!-- 播放器區域 -->
             <div class="player-card">
                 <h2 class="player-title">影片播放器</h2>
-                <div class="video-title" id="videoTitle" style="display: none;"></div>
+                <div class="video-title" id="videoTitle">請先搜尋並選擇一部影片</div>
                 
                 <div class="player-container" id="playerContainer">
                     <div class="player-area" id="playerArea">
                         <div class="placeholder" id="placeholder">
-                            請選擇一個影片開始播放
+                            播放器區域
                         </div>
-                        <div id="youtube-player" class="youtube-player" style="display: none;"></div>
-                    </div>
-                    
-                    <!-- Apple風格播放器控制項 -->
-                    <div class="player-overlay" id="playerOverlay">
-                        <div class="player-controls">
-                            <div class="progress-container" id="progressContainer">
-                                <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
-                                <div class="progress-bar" id="progressBar">
-                                    <div class="progress-filled" id="progressFilled"></div>
-                                    <div class="progress-handle" id="progressHandle"></div>
-                                </div>
-                            </div>
-                            
-                            <div class="controls-row">
-                                <div class="controls-left">
-                                    <button class="control-button play-pause" id="playPauseBtn" title="播放/暫停">
-                                        ▶️
-                                    </button>
-                                    <button class="control-button" id="seekBackBtn" title="快退10秒">
-                                        ⏪
-                                    </button>
-                                    <button class="control-button" id="seekForwardBtn" title="快進10秒">
-                                        ⏩
-                                    </button>
-                                    <div class="volume-container">
-                                        <button class="control-button" id="muteBtn" title="靜音/取消靜音">
-                                            🔊
-                                        </button>
-                                        <div class="volume-slider" id="volumeSlider">
-                                            <div class="volume-filled" id="volumeFilled"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="controls-right">
-                                    <button class="control-button" id="ccBtn" title="字幕開關">
-                                        CC
-                                    </button>
-                                    <button class="control-button" id="fullscreenBtn" title="全螢幕">
-                                        ⛶
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        <div id="youtube-player" style="display: none;"></div>
                     </div>
                 </div>
             </div>
@@ -581,30 +349,14 @@
         </div>
     </div>
 
-    <!-- 全螢幕播放器 -->
-    <div class="fullscreen-container" id="fullscreenContainer">
-        <div class="fullscreen-player" id="fullscreenPlayer">
-            <!-- 全螢幕播放器內容將在這裡動態插入 -->
-        </div>
-    </div>
-
     <script>
         // YouTube API Key
         const YOUTUBE_API_KEY = 'AIzaSyDjypfpOwmfNGhF61lXdkZ-DtybwNv0aTg';
         
         // 全域變數
         let searchResults = [];
-        let currentVideo = null;
         let player = null;
-        let isPlaying = false;
-        let isMuted = false;
         let isMobile = false;
-        let isFullscreen = false;
-        let currentTime = 0;
-        let duration = 0;
-        let volume = 100;
-        let ccEnabled = false;
-        let progressUpdateInterval = null;
 
         // DOM 元素
         const searchInput = document.getElementById('searchInput');
@@ -613,26 +365,11 @@
         const resultsCount = document.getElementById('resultsCount');
         const videoTitle = document.getElementById('videoTitle');
         const placeholder = document.getElementById('placeholder');
-        const playerContainer = document.getElementById('playerContainer');
-        const playerOverlay = document.getElementById('playerOverlay');
-        const playPauseBtn = document.getElementById('playPauseBtn');
-        const seekBackBtn = document.getElementById('seekBackBtn');
-        const seekForwardBtn = document.getElementById('seekForwardBtn');
-        const muteBtn = document.getElementById('muteBtn');
-        const ccBtn = document.getElementById('ccBtn');
-        const fullscreenBtn = document.getElementById('fullscreenBtn');
-        const progressBar = document.getElementById('progressBar');
-        const progressFilled = document.getElementById('progressFilled');
-        const progressHandle = document.getElementById('progressHandle');
-        const timeDisplay = document.getElementById('timeDisplay');
-        const volumeSlider = document.getElementById('volumeSlider');
-        const volumeFilled = document.getElementById('volumeFilled');
-        const fullscreenContainer = document.getElementById('fullscreenContainer');
-        const fullscreenPlayer = document.getElementById('fullscreenPlayer');
         const statusMessage = document.getElementById('statusMessage');
         const mainGrid = document.getElementById('mainGrid');
         const mobileIcon = document.getElementById('mobile-icon');
         const mobileIndicator = document.getElementById('mobileIndicator');
+        const youtubePlayerDiv = document.getElementById('youtube-player');
 
         // 檢測手機裝置
         function checkMobile() {
@@ -645,7 +382,7 @@
                 }
             } else {
                 mainGrid.style.gridTemplateColumns = '2fr 1fr';
-                mobileIcon.style.color = '#9ca3af';
+                mobileIcon.style.color = '#1f2937';
                 if (mobileIndicator) {
                     mobileIndicator.style.display = 'none';
                 }
@@ -660,9 +397,9 @@
             firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
         }
 
-        // YouTube API準備就緒回調
+        // YouTube API準備就緒回調 (此處可留空)
         window.onYouTubeIframeAPIReady = function() {
-            console.log('YouTube IFrame API ready');
+            console.log('YouTube IFrame API is ready.');
         };
 
         // 搜尋YouTube影片
@@ -672,6 +409,9 @@
 
             searchBtn.disabled = true;
             searchBtn.textContent = '搜尋中...';
+            resultsList.innerHTML = '<div class="empty-state">正在搜尋...</div>';
+            resultsCount.textContent = '';
+
 
             try {
                 const response = await fetch(
@@ -679,7 +419,9 @@
                 );
 
                 if (!response.ok) {
-                    throw new Error('API錯誤');
+                    const errorData = await response.json();
+                    const reason = errorData.error.errors[0].reason;
+                    throw new Error(`API 錯誤: ${reason}`);
                 }
 
                 const data = await response.json();
@@ -687,10 +429,10 @@
                 statusMessage.className = 'status-message status-success';
                 statusMessage.textContent = '✅ 已連接YouTube API，可正常搜尋影片';
             } catch (error) {
-                console.log('API錯誤，使用模擬數據:', error.message);
+                console.error('API 錯誤:', error.message);
                 searchResults = [];
                 statusMessage.className = 'status-message status-warning';
-                statusMessage.textContent = '⚠️ API錯誤，請檢查網路連線或API金鑰';
+                statusMessage.textContent = `⚠️ API錯誤，請檢查網路連線或API金鑰 (${error.message})`;
             }
 
             displayResults();
@@ -726,277 +468,25 @@
 
         // 播放影片
         function playVideo(videoId, title) {
-            currentVideo = { id: { videoId }, snippet: { title } };
-            
             videoTitle.textContent = title;
-            videoTitle.style.display = 'block';
             placeholder.style.display = 'none';
+            youtubePlayerDiv.style.display = 'block';
 
             if (player) {
                 player.loadVideoById(videoId);
-                isPlaying = true;
-                updatePlayButton();
-                startProgressUpdate();
             } else {
-                const playerHeight = isMobile ? '250' : '400';
                 player = new YT.Player('youtube-player', {
-                    height: playerHeight,
+                    height: '100%',
                     width: '100%',
                     videoId: videoId,
                     playerVars: {
-                        autoplay: 1,
-                        controls: 0,
-                        modestbranding: 1,
-                        rel: 0,
-                        showinfo: 0,
-                        cc_load_policy: 0
-                    },
-                    events: {
-                        onReady: function(event) {
-                            document.getElementById('youtube-player').style.display = 'block';
-                            isPlaying = true;
-                            updatePlayButton();
-                            startProgressUpdate();
-                            updateVolume();
-                        },
-                        onStateChange: function(event) {
-                            if (event.data === YT.PlayerState.PLAYING) {
-                                isPlaying = true;
-                                startProgressUpdate();
-                            } else if (event.data === YT.PlayerState.PAUSED) {
-                                isPlaying = false;
-                                stopProgressUpdate();
-                            } else if (event.data === YT.PlayerState.ENDED) {
-                                isPlaying = false;
-                                stopProgressUpdate();
-                            }
-                            updatePlayButton();
-                        }
+                        'autoplay': 1,       // 自動播放
+                        'controls': 1,       // 顯示原生控制項
+                        'rel': 0,            // 播完不顯示相關影片
+                        'modestbranding': 1  // 減少YouTube標誌
                     }
                 });
             }
-        }
-
-        // 更新播放按鈕
-        function updatePlayButton() {
-            playPauseBtn.textContent = isPlaying ? '⏸️' : '▶️';
-        }
-
-        // 播放/暫停控制
-        function togglePlayPause() {
-            if (!player) return;
-            
-            if (isPlaying) {
-                player.pauseVideo();
-            } else {
-                player.playVideo();
-            }
-        }
-
-        // 靜音控制
-        function toggleMute() {
-            if (!player) return;
-            
-            if (isMuted) {
-                player.unMute();
-                isMuted = false;
-                muteBtn.textContent = '🔊';
-                updateVolume();
-            } else {
-                player.mute();
-                isMuted = true;
-                muteBtn.textContent = '🔇';
-                volumeFilled.style.width = '0%';
-            }
-        }
-
-        // 字幕控制
-        function toggleCC() {
-            if (!player) return;
-            
-            try {
-                const tracks = player.getOption('captions', 'tracklist');
-                if (tracks && tracks.length > 0) {
-                    if (ccEnabled) {
-                        player.unloadModule('captions');
-                        ccEnabled = false;
-                        ccBtn.style.background = 'none';
-                    } else {
-                        player.loadModule('captions');
-                        player.setOption('captions', 'track', tracks[0]);
-                        ccEnabled = true;
-                        ccBtn.style.background = 'rgba(255, 255, 255, 0.2)';
-                    }
-                }
-            } catch (e) {
-                console.log('字幕功能不可用');
-            }
-        }
-
-        // 全螢幕控制
-        function toggleFullscreen() {
-            if (!player) return;
-            
-            if (isFullscreen) {
-                exitFullscreen();
-            } else {
-                enterFullscreen();
-            }
-        }
-
-        function enterFullscreen() {
-            isFullscreen = true;
-            fullscreenContainer.classList.add('active');
-            
-            // 移動播放器到全螢幕容器
-            const playerElement = document.getElementById('youtube-player');
-            const overlay = playerOverlay.cloneNode(true);
-            
-            fullscreenPlayer.innerHTML = '';
-            fullscreenPlayer.appendChild(playerElement);
-            fullscreenPlayer.appendChild(overlay);
-            
-            // 重新綁定事件
-            bindControlEvents(overlay);
-            
-            // 調整播放器尺寸
-            player.setSize(window.innerWidth, window.innerHeight);
-            
-            fullscreenBtn.textContent = '⛶';
-        }
-
-        function exitFullscreen() {
-            isFullscreen = false;
-            fullscreenContainer.classList.remove('active');
-            
-            // 移動播放器回原位置
-            const playerElement = document.getElementById('youtube-player');
-            document.getElementById('playerArea').appendChild(playerElement);
-            
-            // 調整播放器尺寸
-            const playerHeight = isMobile ? '250' : '400';
-            player.setSize('100%', playerHeight);
-            
-            fullscreenBtn.textContent = '⛶';
-        }
-
-        // 快進/快退
-        function seekVideo(seconds) {
-            if (!player) return;
-            
-            const currentTime = player.getCurrentTime();
-            const newTime = Math.max(0, Math.min(duration, currentTime + seconds));
-            player.seekTo(newTime, true);
-        }
-
-        // 進度條控制
-        function updateProgress() {
-            if (!player) return;
-            
-            try {
-                currentTime = player.getCurrentTime();
-                duration = player.getDuration();
-                
-                if (duration > 0) {
-                    const progress = (currentTime / duration) * 100;
-                    progressFilled.style.width = progress + '%';
-                    progressHandle.style.left = progress + '%';
-                    
-                    timeDisplay.textContent = formatTime(currentTime) + ' / ' + formatTime(duration);
-                }
-            } catch (e) {
-                // 忽略錯誤
-            }
-        }
-
-        function formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return mins + ':' + (secs < 10 ? '0' : '') + secs;
-        }
-
-        function startProgressUpdate() {
-            stopProgressUpdate();
-            progressUpdateInterval = setInterval(updateProgress, 1000);
-        }
-
-        function stopProgressUpdate() {
-            if (progressUpdateInterval) {
-                clearInterval(progressUpdateInterval);
-                progressUpdateInterval = null;
-            }
-        }
-
-        // 音量控制
-        function updateVolume() {
-            if (!player) return;
-            
-            try {
-                volume = player.getVolume();
-                volumeFilled.style.width = volume + '%';
-            } catch (e) {
-                // 忽略錯誤
-            }
-        }
-
-        function setVolume(newVolume) {
-            if (!player) return;
-            
-            volume = Math.max(0, Math.min(100, newVolume));
-            player.setVolume(volume);
-            volumeFilled.style.width = volume + '%';
-            
-            if (volume === 0) {
-                isMuted = true;
-                muteBtn.textContent = '🔇';
-            } else {
-                isMuted = false;
-                muteBtn.textContent = '🔊';
-            }
-        }
-
-        // 進度條點擊事件
-        function handleProgressClick(e) {
-            if (!player || duration === 0) return;
-            
-            const rect = progressBar.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const progress = clickX / rect.width;
-            const newTime = progress * duration;
-            
-            player.seekTo(newTime, true);
-        }
-
-        // 音量條點擊事件
-        function handleVolumeClick(e) {
-            const rect = volumeSlider.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const newVolume = (clickX / rect.width) * 100;
-            setVolume(newVolume);
-        }
-
-        // 綁定控制事件
-        function bindControlEvents(overlay = playerOverlay) {
-            const controls = overlay.querySelector('.player-controls');
-            if (!controls) return;
-            
-            const playBtn = controls.querySelector('.play-pause');
-            const seekBack = controls.querySelector('#seekBackBtn') || controls.querySelector('[title="快退10秒"]');
-            const seekForward = controls.querySelector('#seekForwardBtn') || controls.querySelector('[title="快進10秒"]');
-            const mute = controls.querySelector('#muteBtn') || controls.querySelector('[title="靜音/取消靜音"]');
-            const cc = controls.querySelector('#ccBtn') || controls.querySelector('[title="字幕開關"]');
-            const fullscreen = controls.querySelector('#fullscreenBtn') || controls.querySelector('[title="全螢幕"]');
-            const progress = controls.querySelector('.progress-bar');
-            const volumeSliderEl = controls.querySelector('.volume-slider');
-            
-            if (playBtn) playBtn.addEventListener('click', togglePlayPause);
-            if (seekBack) seekBack.addEventListener('click', () => seekVideo(-10));
-            if (seekForward) seekForward.addEventListener('click', () => seekVideo(10));
-            if (mute) mute.addEventListener('click', toggleMute);
-            if (cc) cc.addEventListener('click', toggleCC);
-            if (fullscreen) fullscreen.addEventListener('click', toggleFullscreen);
-            if (progress) progress.addEventListener('click', handleProgressClick);
-            if (volumeSliderEl) volumeSliderEl.addEventListener('click', handleVolumeClick);
         }
 
         // 事件監聽器
@@ -1004,53 +494,6 @@
         searchInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 searchVideos();
-            }
-        });
-
-        // 綁定初始控制事件
-        bindControlEvents();
-
-        // 鍵盤快捷鍵
-        document.addEventListener('keydown', function(e) {
-            if (!player) return;
-            
-            switch(e.code) {
-                case 'Space':
-                    e.preventDefault();
-                    togglePlayPause();
-                    break;
-                case 'ArrowLeft':
-                    e.preventDefault();
-                    seekVideo(-10);
-                    break;
-                case 'ArrowRight':
-                    e.preventDefault();
-                    seekVideo(10);
-                    break;
-                case 'KeyM':
-                    e.preventDefault();
-                    toggleMute();
-                    break;
-                case 'KeyF':
-                    e.preventDefault();
-                    toggleFullscreen();
-                    break;
-                case 'KeyC':
-                    e.preventDefault();
-                    toggleCC();
-                    break;
-                case 'Escape':
-                    if (isFullscreen) {
-                        exitFullscreen();
-                    }
-                    break;
-            }
-        });
-
-        // 全螢幕退出監聽
-        document.addEventListener('fullscreenchange', function() {
-            if (!document.fullscreenElement && isFullscreen) {
-                exitFullscreen();
             }
         });
 
@@ -1062,4 +505,3 @@
     </script>
 </body>
 </html>
-
