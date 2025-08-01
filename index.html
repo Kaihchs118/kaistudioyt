@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube 搜尋播放器 - Apple風格</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #dbeafe 0%, #c7d2fe 100%);
+            min-height: 100vh;
+            padding: 16px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        
+        .subtitle {
+            color: #6b7280;
+            font-size: 1rem;
+        }
+        
+        .mobile-indicator {
+            color: #059669;
+            font-size: 0.875rem;
+            margin-top: 4px;
+        }
+        
+        .search-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 32px;
+        }
+        
+        .search-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .search-form {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        
+        .search-input:focus {
+            border-color: #3b82f6;
+        }
+        
+        .search-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .search-btn:hover {
+            background: #2563eb;
+        }
+        
+        .search-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 32px;
+        }
+        
+        .player-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .player-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .video-title {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-bottom: 16px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .player-container {
+            position: relative;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 16px;
+            aspect-ratio: 16/9;
+        }
+        
+        .player-area {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .placeholder {
+            color: #9ca3af;
+            text-align: center;
+            padding: 32px;
+        }
+        
+        #youtube-player {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Apple風格播放器控制項 */
+        .player-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(transparent 60%, rgba(0,0,0,0.8) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .player-container:hover .player-overlay,
+        .player-overlay.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .player-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            color: white;
+        }
+        
+        .progress-container {
+            margin-bottom: 16px;
+            position: relative;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-filled {
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+        
+        .progress-handle {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .progress-container:hover .progress-handle {
+            opacity: 1;
+        }
+        
+        .time-display {
+            position: absolute;
+            top: -30px;
+            left: 0;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .controls-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .controls-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .controls-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .control-button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+        }
+        
+        .control-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .control-button.play-pause {
+            width: 48px;
+            height: 48px;
+            font-size: 20px;
+        }
+        
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .volume-slider {
+            width: 80px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .volume-filled {
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 2px;
+            width: 100%;
+            transition: width 0.1s ease;
+        }
+        
+        .fullscreen-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .fullscreen-container.active {
+            display: block;
+        }
+        
+        .fullscreen-player {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        .results-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .results-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .results-count {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-bottom: 16px;
+        }
+        
+        .results-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .result-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .result-item:hover {
+            background: #f9fafb;
+        }
+        
+        .result-thumb {
+            width: 80px;
+            height: 60px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            flex-shrink: 0;
+            object-fit: cover;
+        }
+        
+        .result-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .result-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .result-channel {
+            color: #6b7280;
+            font-size: 0.75rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #6b7280;
+            padding: 48px 16px;
+        }
+        
+        .status-message {
+            text-align: center;
+            margin-top: 24px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+        }
+        
+        .status-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        /* 手機版樣式 */
+        @media (max-width: 768px) {
+            body {
+                padding: 8px;
+            }
+            
+            .title {
+                font-size: 1.5rem;
+            }
+            
+            .main-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .search-form {
+                flex-direction: column;
+            }
+            
+            .search-btn {
+                width: 100%;
+            }
+            
+            .controls-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .controls-left,
+            .controls-right {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .volume-container {
+                display: none;
+            }
+            
+            .result-thumb {
+                width: 60px;
+                height: 45px;
+            }
+        }
+        
+        /* 確保控制項正常顯示 */
+        .player-overlay {
+            z-index: 100;
+        }
+        
+        .player-controls {
+            z-index: 101;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 標題 -->
+        <div class="header">
+            <h1 class="title">
+                <span id="mobile-icon">🍎</span>
+                YouTube 搜尋播放器
+            </h1>
+            <p class="subtitle">Apple風格設計 - 搜尋並播放您喜愛的YouTube影片</p>
+            <p class="mobile-indicator" id="mobile-indicator" style="display: none;">📱 手機版介面已啟用</p>
+        </div>
+
+        <!-- 搜尋區域 -->
+        <div class="search-card">
+            <h2 class="search-title">
+                🔍 搜尋影片
+            </h2>
+            <div class="search-form">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    class="search-input" 
+                    placeholder="輸入關鍵字搜尋影片..."
+                >
+                <button id="searchBtn" class="search-btn">搜尋</button>
+            </div>
+        </div>
+
+        <div class="main-grid" id="mainGrid">
+            <!-- 播放器區域 -->
+            <div class="player-card">
+                <h2 class="player-title">影片播放器</h2>
+                <div class="video-title" id="videoTitle" style="display: none;"></div>
+                
+                <div class="player-container" id="playerContainer">
+                    <div class="player-area" id="playerArea">
+                        <div class="placeholder" id="placeholder">
+                            請選擇一個影片開始播放
+                        </div>
+                        <div id="youtube-player" class="youtube-player" style="display: none;"></div>
+                    </div>
+                    
+                    <!-- Apple風格播放器控制項 -->
+                    <div class="player-overlay" id="playerOverlay">
+                        <div class="player-controls">
+                            <div class="progress-container" id="progressContainer">
+                                <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+                                <div class="progress-bar" id="progressBar">
+                                    <div class="progress-filled" id="progressFilled"></div>
+                                    <div class="progress-handle" id="progressHandle"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="controls-row">
+                                <div class="controls-left">
+                                    <button class="control-button play-pause" id="playPauseBtn" title="播放/暫停">
+                                        ▶️
+                                    </button>
+                                    <button class="control-button" id="seekBackBtn" title="快退10秒">
+                                        ⏪
+                                    </button>
+                                    <button class="control-button" id="seekForwardBtn" title="快進10秒">
+                                        ⏩
+                                    </button>
+                                    <div class="volume-container">
+                                        <button class="control-button" id="muteBtn" title="靜音/取消靜音">
+                                            🔊
+                                        </button>
+                                        <div class="volume-slider" id="volumeSlider">
+                                            <div class="volume-filled" id="volumeFilled"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="controls-right">
+                                    <button class="control-button" id="ccBtn" title="字幕開關">
+                                        CC
+                                    </button>
+                                    <button class="control-button" id="fullscreenBtn" title="全螢幕">
+                                        ⛶
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 搜尋結果區域 -->
+            <div class="results-card">
+                <h2 class="results-title">搜尋結果</h2>
+                <div class="results-count" id="resultsCount"></div>
+                
+                <div class="results-list" id="resultsList">
+                    <div class="empty-state">
+                        輸入關鍵字開始搜尋
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 狀態訊息 -->
+        <div class="status-message status-success" id="statusMessage">
+            ✅ 已連接YouTube API，可正常搜尋影片
+        </div>
+    </div>
+
+    <!-- 全螢幕播放器 -->
+    <div class="fullscreen-container" id="fullscreenContainer">
+        <div class="fullscreen-player" id="fullscreenPlayer">
+            <!-- 全螢幕播放器內容將在這裡動態插入 -->
+        </div>
+    </div>
+
+    <script>
+        // YouTube API Key
+        const YOUTUBE_API_KEY = 'AIzaSyDjypfpOwmfNGhF61lXdkZ-DtybwNv0aTg';
+        
+        // 全域變數
+        let searchResults = [];
+        let currentVideo = null;
+        let player = null;
+        let isPlaying = false;
+        let isMuted = false;
+        let isMobile = false;
+        let isFullscreen = false;
+        let currentTime = 0;
+        let duration = 0;
+        let volume = 100;
+        let ccEnabled = false;
+        let progressUpdateInterval = null;
+
+        // DOM 元素
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const resultsList = document.getElementById('resultsList');
+        const resultsCount = document.getElementById('resultsCount');
+        const videoTitle = document.getElementById('videoTitle');
+        const placeholder = document.getElementById('placeholder');
+        const playerContainer = document.getElementById('playerContainer');
+        const playerOverlay = document.getElementById('playerOverlay');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const seekBackBtn = document.getElementById('seekBackBtn');
+        const seekForwardBtn = document.getElementById('seekForwardBtn');
+        const muteBtn = document.getElementById('muteBtn');
+        const ccBtn = document.getElementById('ccBtn');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressFilled = document.getElementById('progressFilled');
+        const progressHandle = document.getElementById('progressHandle');
+        const timeDisplay = document.getElementById('timeDisplay');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeFilled = document.getElementById('volumeFilled');
+        const fullscreenContainer = document.getElementById('fullscreenContainer');
+        const fullscreenPlayer = document.getElementById('fullscreenPlayer');
+        const statusMessage = document.getElementById('statusMessage');
+        const mainGrid = document.getElementById('mainGrid');
+        const mobileIcon = document.getElementById('mobile-icon');
+        const mobileIndicator = document.getElementById('mobileIndicator');
+
+        // 檢測手機裝置
+        function checkMobile() {
+            isMobile = window.innerWidth < 768;
+            if (isMobile) {
+                mainGrid.style.gridTemplateColumns = '1fr';
+                mobileIcon.style.color = '#059669';
+                if (mobileIndicator) {
+                    mobileIndicator.style.display = 'block';
+                }
+            } else {
+                mainGrid.style.gridTemplateColumns = '2fr 1fr';
+                mobileIcon.style.color = '#9ca3af';
+                if (mobileIndicator) {
+                    mobileIndicator.style.display = 'none';
+                }
+            }
+        }
+
+        // 載入YouTube IFrame API
+        function loadYouTubeAPI() {
+            const tag = document.createElement('script');
+            tag.src = 'https://www.youtube.com/iframe_api';
+            const firstScriptTag = document.getElementsByTagName('script')[0];
+            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        }
+
+        // YouTube API準備就緒回調
+        window.onYouTubeIframeAPIReady = function() {
+            console.log('YouTube IFrame API ready');
+        };
+
+        // 搜尋YouTube影片
+        async function searchVideos() {
+            const query = searchInput.value.trim();
+            if (!query) return;
+
+            searchBtn.disabled = true;
+            searchBtn.textContent = '搜尋中...';
+
+            try {
+                const response = await fetch(
+                    `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=12&q=${encodeURIComponent(query)}&type=video&key=${YOUTUBE_API_KEY}`
+                );
+
+                if (!response.ok) {
+                    throw new Error('API錯誤');
+                }
+
+                const data = await response.json();
+                searchResults = data.items || [];
+                statusMessage.className = 'status-message status-success';
+                statusMessage.textContent = '✅ 已連接YouTube API，可正常搜尋影片';
+            } catch (error) {
+                console.log('API錯誤，使用模擬數據:', error.message);
+                searchResults = [];
+                statusMessage.className = 'status-message status-warning';
+                statusMessage.textContent = '⚠️ API錯誤，請檢查網路連線或API金鑰';
+            }
+
+            displayResults();
+            searchBtn.disabled = false;
+            searchBtn.textContent = '搜尋';
+        }
+
+        // 顯示搜尋結果
+        function displayResults() {
+            if (searchResults.length === 0) {
+                resultsList.innerHTML = '<div class="empty-state">沒有找到相關影片</div>';
+                resultsCount.textContent = '';
+                return;
+            }
+
+            resultsCount.textContent = `找到 ${searchResults.length} 個結果`;
+            
+            resultsList.innerHTML = searchResults.map(video => `
+                <div class="result-item" onclick="playVideo('${video.id.videoId}', '${video.snippet.title.replace(/'/g, "\\'")}')">
+                    <img 
+                        src="${video.snippet.thumbnails.default.url}" 
+                        alt="${video.snippet.title}"
+                        class="result-thumb"
+                        onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjkwIiB2aWV3Qm94PSIwIDAgMTIwIDkwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTIwIiBoZWlnaHQ9IjkwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik00OCA0MEw3MiA1NUw0OCA3MFY0MFoiIGZpbGw9IiM5Q0EzQUYiLz4KPC9zdmc+'"
+                    >
+                    <div class="result-info">
+                        <div class="result-title">${video.snippet.title}</div>
+                        <div class="result-channel">${video.snippet.channelTitle}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 播放影片
+        function playVideo(videoId, title) {
+            currentVideo = { id: { videoId }, snippet: { title } };
+            
+            videoTitle.textContent = title;
+            videoTitle.style.display = 'block';
+            placeholder.style.display = 'none';
+
+            if (player) {
+                player.loadVideoById(videoId);
+                isPlaying = true;
+                updatePlayButton();
+                startProgressUpdate();
+            } else {
+                const playerHeight = isMobile ? '250' : '400';
+                player = new YT.Player('youtube-player', {
+                    height: playerHeight,
+                    width: '100%',
+                    videoId: videoId,
+                    playerVars: {
+                        autoplay: 1,
+                        controls: 0,
+                        modestbranding: 1,
+                        rel: 0,
+                        showinfo: 0,
+                        cc_load_policy: 0
+                    },
+                    events: {
+                        onReady: function(event) {
+                            document.getElementById('youtube-player').style.display = 'block';
+                            isPlaying = true;
+                            updatePlayButton();
+                            startProgressUpdate();
+                            updateVolume();
+                        },
+                        onStateChange: function(event) {
+                            if (event.data === YT.PlayerState.PLAYING) {
+                                isPlaying = true;
+                                startProgressUpdate();
+                            } else if (event.data === YT.PlayerState.PAUSED) {
+                                isPlaying = false;
+                                stopProgressUpdate();
+                            } else if (event.data === YT.PlayerState.ENDED) {
+                                isPlaying = false;
+                                stopProgressUpdate();
+                            }
+                            updatePlayButton();
+                        }
+                    }
+                });
+            }
+        }
+
+        // 更新播放按鈕
+        function updatePlayButton() {
+            playPauseBtn.textContent = isPlaying ? '⏸️' : '▶️';
+        }
+
+        // 播放/暫停控制
+        function togglePlayPause() {
+            if (!player) return;
+            
+            if (isPlaying) {
+                player.pauseVideo();
+            } else {
+                player.playVideo();
+            }
+        }
+
+        // 靜音控制
+        function toggleMute() {
+            if (!player) return;
+            
+            if (isMuted) {
+                player.unMute();
+                isMuted = false;
+                muteBtn.textContent = '🔊';
+                updateVolume();
+            } else {
+                player.mute();
+                isMuted = true;
+                muteBtn.textContent = '🔇';
+                volumeFilled.style.width = '0%';
+            }
+        }
+
+        // 字幕控制
+        function toggleCC() {
+            if (!player) return;
+            
+            try {
+                const tracks = player.getOption('captions', 'tracklist');
+                if (tracks && tracks.length > 0) {
+                    if (ccEnabled) {
+                        player.unloadModule('captions');
+                        ccEnabled = false;
+                        ccBtn.style.background = 'none';
+                    } else {
+                        player.loadModule('captions');
+                        player.setOption('captions', 'track', tracks[0]);
+                        ccEnabled = true;
+                        ccBtn.style.background = 'rgba(255, 255, 255, 0.2)';
+                    }
+                }
+            } catch (e) {
+                console.log('字幕功能不可用');
+            }
+        }
+
+        // 全螢幕控制
+        function toggleFullscreen() {
+            if (!player) return;
+            
+            if (isFullscreen) {
+                exitFullscreen();
+            } else {
+                enterFullscreen();
+            }
+        }
+
+        function enterFullscreen() {
+            isFullscreen = true;
+            fullscreenContainer.classList.add('active');
+            
+            // 移動播放器到全螢幕容器
+            const playerElement = document.getElementById('youtube-player');
+            const overlay = playerOverlay.cloneNode(true);
+            
+            fullscreenPlayer.innerHTML = '';
+            fullscreenPlayer.appendChild(playerElement);
+            fullscreenPlayer.appendChild(overlay);
+            
+            // 重新綁定事件
+            bindControlEvents(overlay);
+            
+            // 調整播放器尺寸
+            player.setSize(window.innerWidth, window.innerHeight);
+            
+            fullscreenBtn.textContent = '⛶';
+        }
+
+        function exitFullscreen() {
+            isFullscreen = false;
+            fullscreenContainer.classList.remove('active');
+            
+            // 移動播放器回原位置
+            const playerElement = document.getElementById('youtube-player');
+            document.getElementById('playerArea').appendChild(playerElement);
+            
+            // 調整播放器尺寸
+            const playerHeight = isMobile ? '250' : '400';
+            player.setSize('100%', playerHeight);
+            
+            fullscreenBtn.textContent = '⛶';
+        }
+
+        // 快進/快退
+        function seekVideo(seconds) {
+            if (!player) return;
+            
+            const currentTime = player.getCurrentTime();
+            const newTime = Math.max(0, Math.min(duration, currentTime + seconds));
+            player.seekTo(newTime, true);
+        }
+
+        // 進度條控制
+        function updateProgress() {
+            if (!player) return;
+            
+            try {
+                currentTime = player.getCurrentTime();
+                duration = player.getDuration();
+                
+                if (duration > 0) {
+                    const progress = (currentTime / duration) * 100;
+                    progressFilled.style.width = progress + '%';
+                    progressHandle.style.left = progress + '%';
+                    
+                    timeDisplay.textContent = formatTime(currentTime) + ' / ' + formatTime(duration);
+                }
+            } catch (e) {
+                // 忽略錯誤
+            }
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return mins + ':' + (secs < 10 ? '0' : '') + secs;
+        }
+
+        function startProgressUpdate() {
+            stopProgressUpdate();
+            progressUpdateInterval = setInterval(updateProgress, 1000);
+        }
+
+        function stopProgressUpdate() {
+            if (progressUpdateInterval) {
+                clearInterval(progressUpdateInterval);
+                progressUpdateInterval = null;
+            }
+        }
+
+        // 音量控制
+        function updateVolume() {
+            if (!player) return;
+            
+            try {
+                volume = player.getVolume();
+                volumeFilled.style.width = volume + '%';
+            } catch (e) {
+                // 忽略錯誤
+            }
+        }
+
+        function setVolume(newVolume) {
+            if (!player) return;
+            
+            volume = Math.max(0, Math.min(100, newVolume));
+            player.setVolume(volume);
+            volumeFilled.style.width = volume + '%';
+            
+            if (volume === 0) {
+                isMuted = true;
+                muteBtn.textContent = '🔇';
+            } else {
+                isMuted = false;
+                muteBtn.textContent = '🔊';
+            }
+        }
+
+        // 進度條點擊事件
+        function handleProgressClick(e) {
+            if (!player || duration === 0) return;
+            
+            const rect = progressBar.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const progress = clickX / rect.width;
+            const newTime = progress * duration;
+            
+            player.seekTo(newTime, true);
+        }
+
+        // 音量條點擊事件
+        function handleVolumeClick(e) {
+            const rect = volumeSlider.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const newVolume = (clickX / rect.width) * 100;
+            setVolume(newVolume);
+        }
+
+        // 綁定控制事件
+        function bindControlEvents(overlay = playerOverlay) {
+            const controls = overlay.querySelector('.player-controls');
+            if (!controls) return;
+            
+            const playBtn = controls.querySelector('.play-pause');
+            const seekBack = controls.querySelector('#seekBackBtn') || controls.querySelector('[title="快退10秒"]');
+            const seekForward = controls.querySelector('#seekForwardBtn') || controls.querySelector('[title="快進10秒"]');
+            const mute = controls.querySelector('#muteBtn') || controls.querySelector('[title="靜音/取消靜音"]');
+            const cc = controls.querySelector('#ccBtn') || controls.querySelector('[title="字幕開關"]');
+            const fullscreen = controls.querySelector('#fullscreenBtn') || controls.querySelector('[title="全螢幕"]');
+            const progress = controls.querySelector('.progress-bar');
+            const volumeSliderEl = controls.querySelector('.volume-slider');
+            
+            if (playBtn) playBtn.addEventListener('click', togglePlayPause);
+            if (seekBack) seekBack.addEventListener('click', () => seekVideo(-10));
+            if (seekForward) seekForward.addEventListener('click', () => seekVideo(10));
+            if (mute) mute.addEventListener('click', toggleMute);
+            if (cc) cc.addEventListener('click', toggleCC);
+            if (fullscreen) fullscreen.addEventListener('click', toggleFullscreen);
+            if (progress) progress.addEventListener('click', handleProgressClick);
+            if (volumeSliderEl) volumeSliderEl.addEventListener('click', handleVolumeClick);
+        }
+
+        // 事件監聽器
+        searchBtn.addEventListener('click', searchVideos);
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchVideos();
+            }
+        });
+
+        // 綁定初始控制事件
+        bindControlEvents();
+
+        // 鍵盤快捷鍵
+        document.addEventListener('keydown', function(e) {
+            if (!player) return;
+            
+            switch(e.code) {
+                case 'Space':
+                    e.preventDefault();
+                    togglePlayPause();
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    seekVideo(-10);
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    seekVideo(10);
+                    break;
+                case 'KeyM':
+                    e.preventDefault();
+                    toggleMute();
+                    break;
+                case 'KeyF':
+                    e.preventDefault();
+                    toggleFullscreen();
+                    break;
+                case 'KeyC':
+                    e.preventDefault();
+                    toggleCC();
+                    break;
+                case 'Escape':
+                    if (isFullscreen) {
+                        exitFullscreen();
+                    }
+                    break;
+            }
+        });
+
+        // 全螢幕退出監聽
+        document.addEventListener('fullscreenchange', function() {
+            if (!document.fullscreenElement && isFullscreen) {
+                exitFullscreen();
+            }
+        });
+
+        window.addEventListener('resize', checkMobile);
+
+        // 初始化
+        checkMobile();
+        loadYouTubeAPI();
+    </script>
+</body>
+</html>
+
