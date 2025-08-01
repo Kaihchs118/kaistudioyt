@@ -59,18 +59,17 @@
             display: flex; align-items: center; justify-content: center; transition: all 0.2s;
         }
         .theme-btn:hover { background-color: rgba(128, 128, 128, 0.2); }
-        .search-form { display: flex; gap: 12px; margin-bottom: 12px; }
+        .search-form { display: flex; gap: 12px; }
         .search-input {
             flex: 1; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px;
             font-size: 1rem; outline: none; transition: all 0.2s; background-color: var(--card-bg-glass); color: var(--text-primary);
         }
         .search-input:focus { border-color: #3b82f6; }
-        .search-btn, .shorts-mode-btn {
+        .search-btn {
             color: white; border: none; padding: 12px 24px; border-radius: 8px;
             font-size: 1rem; cursor: pointer; transition: background-color 0.2s;
+            background: #3b82f6;
         }
-        .search-btn { background: #3b82f6; }
-        .shorts-mode-btn { background: #c2410c; width: 100%; }
         .search-btn:disabled { background: #9ca3af; cursor: not-allowed; }
         
         .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 32px; }
@@ -82,7 +81,26 @@
         .results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         #backToSearchBtn { background: none; border: 1px solid var(--border-color); color: var(--text-primary); padding: 4px 10px; border-radius: 6px; cursor: pointer; display: none; }
         .video-title { color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 16px; min-height: 2.5em; }
-        .player-container { position: relative; background: #000; border-radius: 12px; overflow: hidden; margin-bottom: 16px; aspect-ratio: 16/9; }
+        
+        /* --- 智慧型播放器容器 --- */
+        .player-container {
+            position: relative;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 16px auto; /* 讓容器在卡片內置中 */
+            transition: all 0.4s ease-in-out;
+            /* 預設為 16:9 寬螢幕 */
+            width: 100%;
+            max-width: 100%;
+            aspect-ratio: 16/9;
+        }
+        /* 直式影片 (Shorts) 的特殊樣式 */
+        .player-container.is-short {
+            max-width: 320px; /* 直式影片的最大寬度 */
+            aspect-ratio: 9/16;
+        }
+
         .player-area, #youtube-player { width: 100%; height: 100%; }
         .placeholder { color: var(--text-secondary); text-align: center; padding: 32px; }
         .results-count { color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 16px; }
@@ -130,18 +148,6 @@
         .modal-footer { text-align: right; }
         .modal-play-btn { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: background-color 0.2s; }
         
-        #shortsViewer {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #000; z-index: 3000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            opacity: 0; visibility: hidden; transition: all 0.3s ease;
-        }
-        #shortsViewer.visible { opacity: 1; visibility: visible; }
-        .shorts-player-container { width: 100%; max-width: 450px; aspect-ratio: 9 / 16; background-color: #111; border-radius: 12px; overflow: hidden; }
-        #shortsPlayer { width: 100%; height: 100%; }
-        .shorts-controls { position: absolute; top: 20px; right: 20px; display: flex; gap: 12px; }
-        .shorts-nav { position: absolute; bottom: 20px; display: flex; gap: 12px; }
-        .shorts-btn { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
-
         #scrollToTopBtn {
             position: fixed; bottom: 20px; right: 20px; width: 48px; height: 48px; background-color: var(--card-bg-glass); backdrop-filter: blur(10px);
             color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 50%; font-size: 1.5rem; cursor: pointer;
@@ -155,6 +161,7 @@
             body { padding: 8px; } .title { font-size: 1.8rem; } .main-grid { grid-template-columns: 1fr; gap: 16px; }
             .search-form { flex-direction: column; } .search-btn { width: 100%; } .result-thumb { width: 100px; height: 75px; }
             .result-title { font-size: 0.95rem; } .modal-content { width: 95%; }
+            .player-container.is-short { max-width: 280px; } /* 在手機上稍微縮小直式播放器 */
         }
     </style>
 </head>
@@ -177,14 +184,13 @@
                 <input type="text" id="searchInput" class="search-input" placeholder="輸入影片、播放清單或頻道名稱...">
                 <button id="searchBtn" class="search-btn">搜尋</button>
             </div>
-            <button id="shortsModeBtn" class="shorts-mode-btn">🔥 瘋狂 Shorts 模式</button>
         </section>
 
         <main class="main-grid" id="mainGrid">
             <section class="player-card" id="playerCard">
                 <h2 class="player-title">影片播放器</h2>
                 <div class="video-title" id="videoTitle">請先搜尋並選擇一部影片</div>
-                <div class="player-container">
+                <div class="player-container" id="playerContainer">
                     <div class="player-area">
                         <div id="placeholder" class="placeholder">播放器區域</div>
                         <div id="youtube-player" style="display: none;"></div>
@@ -219,38 +225,24 @@
         </div>
     </div>
     
-    <!-- Shorts 播放器 HTML -->
-    <div id="shortsViewer">
-        <div class="shorts-controls">
-             <button id="shortsCloseBtn" class="shorts-btn">離開</button>
-        </div>
-        <div class="shorts-player-container">
-            <div id="shortsPlayer"></div>
-        </div>
-        <div class="shorts-nav">
-             <button id="shortsNextBtn" class="shorts-btn">下一個 &gt;</button>
-        </div>
-    </div>
-
     <button id="scrollToTopBtn" title="返回頂部">⬆️</button>
 
     <script>
-        // !!重要!! 請替換為您自己的 YouTube Data API 金鑰
-        // 將 API 金鑰放在客戶端非常不安全，很容易被濫用導致配額耗盡或產生費用。
-        // 在正式專案中，應透過後端伺服器來代理 API 請求。
+        // ⚠️⚠️⚠️ [極度重要] 安全警告 ⚠️⚠️⚠️
+        // 將 API 金鑰直接儲存在前端 (瀏覽器端) 是非常不安全的做法。
+        // 這會讓任何人都能輕易地看到並盜用您的金鑰，可能導致您的 API 配額被快速耗盡，甚至產生非預期的費用。
+        // 在正式的、公開的專案中，您「必須」將 API 金鑰儲存在後端伺服器上。
+        // 前端應向您的後端發送請求，再由您的後端去呼叫 YouTube API，這樣金鑰才不會外洩。
         const YOUTUBE_API_KEY = 'AIzaSyDjypfpOwmfNGhF61lXdkZ-DtybwNv0aTg';
         
-        let player, shortsPlayer;
-        let lastSearchResults = { html: '', count: '' };
-        let shortsList = [];
-        let currentShortsIndex = 0;
+        let player;
+        let lastSearchResults = { html: '', count: '', title: '' };
 
         const $ = (selector) => document.querySelector(selector);
 
         // 初始化與事件監聽
         document.addEventListener('DOMContentLoaded', () => {
             applyTheme(localStorage.getItem('youtubePlayerTheme') || 'light');
-            checkMobile();
             loadYouTubeAPI();
             setupEventListeners();
         });
@@ -258,16 +250,12 @@
         function setupEventListeners() {
             $('#lightThemeBtn').addEventListener('click', () => applyTheme('light'));
             $('#darkThemeBtn').addEventListener('click', () => applyTheme('dark'));
-            $('#searchBtn').addEventListener('click', searchContent);
+            $('#searchBtn').addEventListener('click', () => searchContent());
             $('#searchInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); searchContent(); } });
-            $('#shortsModeBtn').addEventListener('click', enterShortsMode);
             $('#modalCloseBtn').addEventListener('click', hideConfirmationModal);
             $('#confirmationModal').addEventListener('click', (e) => { if (e.target === e.currentTarget) hideConfirmationModal(); });
-            $('#scrollToTopBtn').addEventListener('click', () => window.scrollTo(0, 0));
+            $('#scrollToTopBtn').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
             $('#backToSearchBtn').addEventListener('click', restoreSearchResults);
-            $('#shortsCloseBtn').addEventListener('click', exitShortsMode);
-            $('#shortsNextBtn').addEventListener('click', playNextShort);
-            window.addEventListener('resize', checkMobile);
             window.addEventListener('scroll', () => $('#scrollToTopBtn').classList.toggle('visible', window.scrollY > 300));
         }
 
@@ -275,29 +263,47 @@
             document.body.className = theme === 'dark' ? 'theme-dark' : 'theme-light';
             localStorage.setItem('youtubePlayerTheme', theme);
         }
-
-        function checkMobile() { /* ... 已存在 ... */ }
         
         function loadYouTubeAPI() {
             const tag = document.createElement('script');
             tag.src = 'https://www.youtube.com/iframe_api';
-            document.head.appendChild(tag);
+            const firstScriptTag = document.getElementsByTagName('script')[0];
+            firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
         }
-        window.onYouTubeIframeAPIReady = () => console.log('YouTube API Ready.');
+        window.onYouTubeIframeAPIReady = () => console.log('YouTube API 已就緒.');
 
-        function showLoadingSkeletons() { /* ... 已存在 ... */ }
+        function showLoadingSkeletons() {
+            $('#resultsCount').textContent = '';
+            let skeletons = '';
+            for(let i=0; i<5; i++) {
+                skeletons += `
+                <div class="skeleton-item">
+                    <div class="skeleton-thumb"></div>
+                    <div class="skeleton-info">
+                        <div class="skeleton-text"></div>
+                        <div class="skeleton-text"></div>
+                    </div>
+                </div>`;
+            }
+            $('#resultsList').innerHTML = skeletons;
+        }
 
         async function apiFetch(url) {
             const response = await fetch(url);
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(`API 錯誤: ${errorData.error.errors[0].reason}`);
+                const reason = errorData.error?.errors[0]?.reason || 'unknown';
+                // 針對常見錯誤給予更友善的提示
+                if (reason === 'quotaExceeded') {
+                    throw new Error('API每日配額已用完，請明天再試。');
+                }
+                throw new Error(`API 錯誤: ${reason}`);
             }
             return response.json();
         }
 
-        async function searchContent(queryOverride = null, type = 'video,playlist,channel') {
-            const query = queryOverride || $('#searchInput').value.trim();
+        async function searchContent() {
+            const query = $('#searchInput').value.trim();
             if (!query) return;
 
             $('#searchBtn').disabled = true;
@@ -306,7 +312,9 @@
             $('#backToSearchBtn').style.display = 'none';
 
             try {
-                const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=24&q=${encodeURIComponent(query)}&type=${type}&key=${YOUTUBE_API_KEY}`;
+                // 在搜尋關鍵字中加入 "-#shorts" 來盡量過濾掉 Shorts，但仍可能搜到
+                const searchquery = encodeURIComponent(query);
+                const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=24&q=${searchquery}&type=video,playlist,channel&key=${YOUTUBE_API_KEY}`;
                 const data = await apiFetch(url);
                 displayResults(data.items || [], '搜尋結果');
                 $('#resultsCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -354,7 +362,7 @@
                 <div class="result-item" onclick="${onclick}">
                     <img src="${thumb}" alt="${title}" class="${thumbClass}">
                     <div class="result-info">
-                        <div><span class="result-badge ${badgeClass}">${type}</span><div class="result-title">${title}</div></div>
+                        <div><span class="result-badge ${badgeClass}">${type.toUpperCase()}</span><div class="result-title">${title}</div></div>
                         <div class="result-channel">${channel}</div>
                     </div>
                 </div>`;
@@ -367,13 +375,13 @@
             $('#modalPlayBtn').onclick = null;
 
             try {
-                let url, part = 'snippet';
+                let url, part = 'snippet,contentDetails';
                 if (type === 'channel') {
-                    url = `https://www.googleapis.com/youtube/v3/channels?part=${part}&id=${id}&key=${YOUTUBE_API_KEY}`;
+                    url = `https://www.googleapis.com/youtube/v3/channels?part=snippet&id=${id}&key=${YOUTUBE_API_KEY}`;
                 } else if (type === 'video') {
                     url = `https://www.googleapis.com/youtube/v3/videos?part=${part}&id=${id}&key=${YOUTUBE_API_KEY}`;
                 } else { // playlist
-                    url = `https://www.googleapis.com/youtube/v3/playlists?part=${part}&id=${id}&key=${YOUTUBE_API_KEY}`;
+                    url = `https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=${id}&key=${YOUTUBE_API_KEY}`;
                 }
                 
                 const data = await apiFetch(url);
@@ -440,6 +448,11 @@
             $('#placeholder').style.display = 'none';
             $('#youtube-player').style.display = 'block';
 
+            // --- 智慧型播放器比例切換 ---
+            // 檢查標題是否包含 #shorts，來判斷是否為直式影片
+            const isShort = title.toLowerCase().includes('#shorts');
+            $('#playerContainer').classList.toggle('is-short', isShort);
+            
             const playerOptions = {
                 height: '100%', width: '100%',
                 playerVars: { 'autoplay': 1, 'controls': 1, 'rel': 0 }
@@ -459,54 +472,6 @@
                 player = new YT.Player('youtube-player', playerOptions);
             }
         }
-
-        // --- Shorts Mode Logic ---
-        async function enterShortsMode() {
-            const query = $('#searchInput').value.trim();
-            if (!query) { alert('請先輸入關鍵字以搜尋相關的 Shorts！'); return; }
-            
-            $('#shortsViewer').classList.add('visible');
-            try {
-                const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=50&q=${encodeURIComponent(query + ' #shorts')}&type=video&videoDuration=short&key=${YOUTUBE_API_KEY}`;
-                const data = await apiFetch(url);
-                shortsList = data.items.filter(item => item.id.videoId) || [];
-                
-                if (shortsList.length === 0) {
-                    alert('找不到相關的 Shorts 影片。');
-                    exitShortsMode();
-                    return;
-                }
-                currentShortsIndex = 0;
-                playShortsByIndex(currentShortsIndex);
-            } catch (error) {
-                alert(`載入 Shorts 失敗: ${error.message}`);
-                exitShortsMode();
-            }
-        }
-
-        function playShortsByIndex(index) {
-             if (!shortsList[index]) return;
-             const videoId = shortsList[index].id.videoId;
-             if (shortsPlayer) {
-                 shortsPlayer.loadVideoById(videoId);
-             } else {
-                 shortsPlayer = new YT.Player('shortsPlayer', {
-                     height: '100%', width: '100%', videoId: videoId,
-                     playerVars: { 'autoplay': 1, 'controls': 0, 'loop': 1, 'playlist': videoId, 'rel': 0 }
-                 });
-             }
-        }
-        
-        function playNextShort() {
-            currentShortsIndex = (currentShortsIndex + 1) % shortsList.length;
-            playShortsByIndex(currentShortsIndex);
-        }
-
-        function exitShortsMode() {
-            $('#shortsViewer').classList.remove('visible');
-            if (shortsPlayer) shortsPlayer.stopVideo();
-        }
-
     </script>
 </body>
 </html>
